@@ -10,10 +10,10 @@ from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
         QVBoxLayout, QWidget)
 
 # Parametry aplikacji
-version = 0.4                       # Wersja aplikacji
+version = 0.5                       # Wersja aplikacji
 app_name = 'AI Trekking Advisor'    # Nazwa aplikacji
-app_width = 600                     # Szerokość okna aplikacji
-app_height = 400                    # Wysokość okna aplikacji
+app_width = 1100                    # Szerokość okna aplikacji
+app_height = 600                    # Wysokość okna aplikacji
 
 
 class WidgetGallery(QDialog):
@@ -21,24 +21,30 @@ class WidgetGallery(QDialog):
         super(WidgetGallery, self).__init__(parent)
 
         self.originalPalette = QApplication.palette()
-        self.setFixedWidth(app_width)
-        self.setFixedHeight(app_height)
+        self.setMinimumHeight(app_height)
+        self.setMaximumWidth(app_width)
         self.createTopLeftGroupBox()
         self.createTopRightGroupBox()
-        self.createBottomLeftTabWidget()
+        self.createbottomTabWidget()
 
         topLayout = QHBoxLayout()
-        topLayout.addStretch(1)
+        topLayout.heightForWidth(1)
+        #topLayout.addStretch(1)
 
-        mainLayout = QGridLayout()
-        mainLayout.addLayout(topLayout, 0, 0, 1, 2)
-        mainLayout.addWidget(self.topLeftGroupBox, 1, 0)
-        mainLayout.addWidget(self.topRightGroupBox, 1, 1)
-        mainLayout.addWidget(self.bottomLeftTabWidget, 2, 0)
-        mainLayout.setRowStretch(1, 1)
-        mainLayout.setRowStretch(2, 1)
-        mainLayout.setColumnStretch(0, 1)
-        mainLayout.setColumnStretch(1, 1)
+        bottomLayout = QHBoxLayout()
+        #bottomLayout.addStretch(1)
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addLayout(topLayout, 1)
+        topLayout.addWidget(self.topLeftGroupBox, 1)
+        topLayout.addWidget(self.topRightGroupBox, 1)
+
+        mainLayout.addLayout(bottomLayout, 1)
+        bottomLayout.addWidget(self.bottomTabWidget, 0)
+        #mainLayout.setRowStretch(1, 1)
+        #mainLayout.setRowStretch(2, 1)
+        #mainLayout.setColumnStretch(0, 1)
+        #mainLayout.setColumnStretch(1, 1)
         self.setLayout(mainLayout)
 
         self.setWindowTitle(f"{app_name} v. {str(version)}")
@@ -51,8 +57,9 @@ class WidgetGallery(QDialog):
 
 
     def createTopLeftGroupBox(self):
-        self.topLeftGroupBox = QGroupBox("Aktywność:")
+        self.topLeftGroupBox = QGroupBox("Aktywność")
         self.topLeftGroupBox.setFixedWidth(120)
+        self.topLeftGroupBox.setMaximumHeight(200)
         radioButton1 = QRadioButton("Trekking")
         radioButton2 = QRadioButton("Wspinaczka")
         radioButton1.setChecked(True)
@@ -64,8 +71,8 @@ class WidgetGallery(QDialog):
         self.topLeftGroupBox.setLayout(layout)
 
     def createTopRightGroupBox(self):
-        self.topRightGroupBox = QGroupBox("Podaj lokalizację i datę wyjazdu:")
-
+        self.topRightGroupBox = QGroupBox("Podaj lokalizację i datę wyjazdu")
+        self.topRightGroupBox.setMaximumHeight(200)
         lineEdit = QLineEdit('')
         lineEdit.setPlaceholderText('Lokalizacja')
 
@@ -79,7 +86,6 @@ class WidgetGallery(QDialog):
         proposeTripPushButton = QPushButton("Proponuj aktywność")
         proposeTripPushButton.setDisabled(True)
         proposeTripPushButton.clicked.connect(self.proposeTrip)
-
         styleComboBox = QComboBox()
 
         layout = QVBoxLayout()
@@ -87,18 +93,17 @@ class WidgetGallery(QDialog):
         layout.addWidget(dateTimeEdit, 2)
         layout.addWidget(findLocPushButton)
         layout.addWidget(proposeTripPushButton)
-        layout.addStretch(1)
         layout.addWidget(styleComboBox)
         self.topRightGroupBox.setLayout(layout)
 
 
-    def createBottomLeftTabWidget(self):
-        self.bottomLeftTabWidget = QTabWidget()
-        self.bottomLeftTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,
+    def createbottomTabWidget(self):
+        self.bottomTabWidget = QTabWidget()
+        self.bottomTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,
                 QSizePolicy.Policy.Ignored)
-        self.bottomLeftTabWidget.setFixedWidth(app_width-300)
+        self.bottomTabWidget.setMinimumWidth(app_width-500)
         tab1 = QWidget()
-        tableWidget = QTableWidget(10, 1)
+        tableWidget = QTableWidget(5, 2)
 
         tab1hbox = QHBoxLayout()
         tab1hbox.setContentsMargins(5, 5, 5, 5)
@@ -106,22 +111,31 @@ class WidgetGallery(QDialog):
         tab1.setLayout(tab1hbox)
 
         tab2 = QWidget()
-        textEdit = QTextEdit()
+        Tab2textEdit = QTextEdit()
 
-        textEdit.setPlainText("Twinkle, twinkle, little star,\n"
-                              "How I wonder what you are.\n" 
-                              "Up above the world so high,\n"
-                              "Like a diamond in the sky.\n"
-                              "Twinkle, twinkle, little star,\n" 
-                              "How I wonder what you are!\n")
+        Tab2textEdit.setPlainText("Propozycja trekkingu, wspinaczki lub innej aktywności w zależności od warunków atmosferycznych i lokalizacji.")
 
         tab2hbox = QHBoxLayout()
         tab2hbox.setContentsMargins(5, 5, 5, 5)
-        tab2hbox.addWidget(textEdit)
+        tab2hbox.addWidget(Tab2textEdit)
         tab2.setLayout(tab2hbox)
 
-        self.bottomLeftTabWidget.addTab(tab1, "&Table")
-        self.bottomLeftTabWidget.addTab(tab2, "Text &Edit")
+        tab3 = QWidget()
+        Tab3textEdit = QTextEdit()
+
+        Tab3textEdit.setPlainText("Lista zalecanego sprzętu w zależności od aktywności i warunków atmosferycznych.")
+
+        tab3hbox = QHBoxLayout()
+        tab3hbox.setContentsMargins(5, 5, 5, 5)
+        tab3hbox.addWidget(Tab3textEdit)
+        tab3.setLayout(tab3hbox)
+
+        tab4 = QWidget()
+
+        self.bottomTabWidget.addTab(tab1, "Lista &miejsc")
+        self.bottomTabWidget.addTab(tab2, "&Opis propozycji wyjazdu")
+        self.bottomTabWidget.addTab(tab3, "Lista zalecanego &sprzętu")
+        self.bottomTabWidget.addTab(tab4, "Prognoza &pogody")
 
     def findLocation(self):
         lineEdit = self.topRightGroupBox.findChild(QLineEdit)
