@@ -1,13 +1,15 @@
 # Aplikacja wspomagająca planowanie trekkingu lub wspinaczki górskiej
+import json
 
-import weatherComponents
 # Importowanie bibliotek PyQt6
 from PyQt6.QtCore import QDateTime, Qt, QTimer
 from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
-        QDial, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-        QProgressBar, QPushButton, QRadioButton, QScrollBar, QSizePolicy,
-        QSlider, QSpinBox, QStyleFactory, QTableWidget, QTabWidget, QTextEdit,
-        QVBoxLayout, QWidget)
+                             QDial, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
+                             QProgressBar, QPushButton, QRadioButton, QScrollBar, QSizePolicy,
+                             QSlider, QSpinBox, QStyleFactory, QTableWidget, QTabWidget, QTextEdit,
+                             QVBoxLayout, QWidget, QTableWidgetItem)
+import weatherComponents
+from openAIComponents import tripProposition
 
 # Parametry aplikacji
 version = 0.5                       # Wersja aplikacji
@@ -84,7 +86,7 @@ class WidgetGallery(QDialog):
         findLocPushButton.clicked.connect(self.findLocation)
 
         proposeTripPushButton = QPushButton("Proponuj aktywność")
-        proposeTripPushButton.setDisabled(True)
+        proposeTripPushButton.setDisabled(False)
         proposeTripPushButton.clicked.connect(self.proposeTrip)
         styleComboBox = QComboBox()
 
@@ -103,7 +105,8 @@ class WidgetGallery(QDialog):
                 QSizePolicy.Policy.Ignored)
         self.bottomTabWidget.setMinimumWidth(app_width-500)
         tab1 = QWidget()
-        tableWidget = QTableWidget(5, 2)
+        tableWidget = QTableWidget(3, 5)
+        tableWidget.setHorizontalHeaderLabels(["Miejsce", "Opis", "Odległość", "Sprzęt", "Poziom trudności"])
 
         tab1hbox = QHBoxLayout()
         tab1hbox.setContentsMargins(5, 5, 5, 5)
@@ -152,8 +155,22 @@ class WidgetGallery(QDialog):
         styleComboBox.clear()  # Czyszczenie comboboxa
         styleComboBox.addItems(locations)
 
+
+    def fillTableWidget(self, trip_proposition:json):
+        tableWidget = self.bottomTabWidget.findChild(QTableWidget)
+
+        for i in range(len(trip_proposition)):
+            for j in range(len(trip_proposition[0])):
+                tableWidget.setItem(i, j, QTableWidgetItem(trip_proposition[i][j]))
+
+        tableWidget.resizeColumnsToContents()
+        tableWidget.resizeRowsToContents()
+
     def proposeTrip(self):
-        trip = ''
+        trip_proposition = tripProposition('Jaworzno', 'wspinaczka')
+        trip_proposition = trip_proposition['proposition_details']
+        #tableWidget = self.bottomTabWidget.findChild(QTableWidget)
+        self.fillTableWidget(trip_proposition)
 
 
 # Uruchomienie aplikacji
