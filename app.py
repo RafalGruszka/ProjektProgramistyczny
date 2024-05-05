@@ -88,14 +88,14 @@ class WidgetGallery(QDialog):
         proposeTripPushButton = QPushButton("Proponuj aktywność")
         proposeTripPushButton.setDisabled(False)
         proposeTripPushButton.clicked.connect(self.proposeTrip)
-        styleComboBox = QComboBox()
+        self.styleComboBox = QComboBox()
 
         layout = QVBoxLayout()
         layout.addWidget(lineEdit, 0)
         layout.addWidget(dateTimeEdit, 2)
         layout.addWidget(findLocPushButton)
         layout.addWidget(proposeTripPushButton)
-        layout.addWidget(styleComboBox)
+        layout.addWidget(self.styleComboBox)
         self.topRightGroupBox.setLayout(layout)
 
 
