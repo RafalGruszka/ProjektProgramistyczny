@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
                              QVBoxLayout, QWidget, QTableWidgetItem)
 import weatherComponents
 from openAIComponents import tripProposition
-
+from PyQt6.QtWidgets import QPushButton
 # Parametry aplikacji
 version = 0.5                       # Wersja aplikacji
 app_name = 'AI Trekking Advisor'    # Nazwa aplikacji
@@ -28,6 +28,7 @@ class WidgetGallery(QDialog):
         self.createTopLeftGroupBox()
         self.createTopRightGroupBox()
         self.createbottomTabWidget()
+        self.trip_props_dict = {}
 
         topLayout = QHBoxLayout()
         topLayout.heightForWidth(1)
@@ -55,8 +56,6 @@ class WidgetGallery(QDialog):
     def changeStyle(self, styleName):
         QApplication.setStyle(QStyleFactory.create(styleName))
         QApplication.setPalette(QApplication.style().standardPalette())
-
-
 
     def createTopLeftGroupBox(self):
         self.topLeftGroupBox = QGroupBox("Aktywność")
@@ -98,15 +97,15 @@ class WidgetGallery(QDialog):
         layout.addWidget(self.styleComboBox)
         self.topRightGroupBox.setLayout(layout)
 
-
     def createbottomTabWidget(self):
         self.bottomTabWidget = QTabWidget()
         self.bottomTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,
                 QSizePolicy.Policy.Ignored)
         self.bottomTabWidget.setMinimumWidth(app_width-500)
         tab1 = QWidget()
-        tableWidget = QTableWidget(3, 5)
-        tableWidget.setHorizontalHeaderLabels(["Miejsce", "Opis", "Odległość", "Sprzęt", "Poziom trudności"])
+        tableWidget = QTableWidget(0, 3)
+        tableWidget.setHorizontalHeaderLabels(["Miejsce", "Odległość", "Poziom trudności"])
+        tableWidget.itemClicked.connect(self.tableItemClicked)
 
         tab1hbox = QHBoxLayout()
         tab1hbox.setContentsMargins(5, 5, 5, 5)
@@ -115,8 +114,9 @@ class WidgetGallery(QDialog):
 
         tab2 = QWidget()
         Tab2textEdit = QTextEdit()
-
-        Tab2textEdit.setPlainText("Propozycja trekkingu, wspinaczki lub innej aktywności w zależności od warunków atmosferycznych i lokalizacji.")
+        Tab2textEdit.setObjectName("Tab2textEdit")
+        Tab2textEdit.setPlainText(
+            "Propozycja trekkingu, wspinaczki lub innej aktywności w zależności od warunków atmosferycznych i lokalizacji.")
 
         tab2hbox = QHBoxLayout()
         tab2hbox.setContentsMargins(5, 5, 5, 5)
@@ -125,7 +125,7 @@ class WidgetGallery(QDialog):
 
         tab3 = QWidget()
         Tab3textEdit = QTextEdit()
-
+        Tab3textEdit.setObjectName("Tab3textEdit")
         Tab3textEdit.setPlainText("Lista zalecanego sprzętu w zależności od aktywności i warunków atmosferycznych.")
 
         tab3hbox = QHBoxLayout()
@@ -155,23 +155,50 @@ class WidgetGallery(QDialog):
         styleComboBox.clear()  # Czyszczenie comboboxa
         styleComboBox.addItems(locations)
 
-
-    def fillTableWidget(self, trip_proposition:json):
+    def fillTableWidget(self, trip_proposition: str):
         tableWidget = self.bottomTabWidget.findChild(QTableWidget)
 
-        for i in range(len(trip_proposition)):
-            for j in range(len(trip_proposition[0])):
-                tableWidget.setItem(i, j, QTableWidgetItem(trip_proposition[i][j]))
+        try:
+            prop_details = json.loads(trip_proposition)
+            print = prop_details
+        except json.JSONDecodeError as e:
+            print("Błąd parsowania JSON:", e)
+            return
+
+        for prop_num in range(1, 4):
+            prop = prop_details.get(f"proposition{prop_num}")
+            if prop:
+                place = prop["place"]
+                distance = prop["distance"]
+                hardenes_level = prop["hardenes_level"]
+
+                rowPosition = tableWidget.rowCount()
+                tableWidget.insertRow(rowPosition)
+
+                tableWidget.setItem(rowPosition, 0, QTableWidgetItem(place))
+                tableWidget.setItem(rowPosition, 1, QTableWidgetItem(str(distance)))
+                tableWidget.setItem(rowPosition, 2, QTableWidgetItem(str(hardenes_level)))
 
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()
 
     def proposeTrip(self):
         trip_proposition = tripProposition('Jaworzno', 'wspinaczka')
-        trip_proposition = trip_proposition['proposition_details']
-        #tableWidget = self.bottomTabWidget.findChild(QTableWidget)
         self.fillTableWidget(trip_proposition)
+        try:
+            self.trip_props_dict = json.loads(trip_proposition)
+        except json.JSONDecodeError as e:
+            print("Błąd parsowania JSON:", e)
+            return
 
+    def tableItemClicked(self, item):
+        place = self.bottomTabWidget.findChild(QTextEdit, "Tab2textEdit")
+        equipment = self.bottomTabWidget.findChild(QTextEdit, "Tab3textEdit")
+        proposition = f'proposition{item.row() + 1}'
+        place_from_dict = self.trip_props_dict[proposition]['proposition_details']
+        equipment_from_dict = self.trip_props_dict[proposition]['equipment']
+        place.setPlainText(place_from_dict)
+        equipment.setPlainText(equipment_from_dict)
 
 # Uruchomienie aplikacji
 if __name__ == '__main__':

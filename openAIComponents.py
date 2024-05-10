@@ -7,7 +7,7 @@ place = "Jaworzno"
 activity = "wspinaczka"  # trekking/wspinaczka
 
 
-def tripProposition(place: str, activity: str) -> json:
+def tripProposition(place: str, activity: str) -> dict:
     api_key = ""
     organization = ""
     question = f"Zaproponuj miejsce do {activity} w okolicy {place}."
@@ -35,16 +35,7 @@ def tripProposition(place: str, activity: str) -> json:
 
     response_content = response.choices[0].message.content
 
-    trip_proposition = {
-        "number": 1,
-        "place": place,
-        "proposition_details": response_content,
-        "distance": 10,  # Dummy value
-        "equipment": "Climbing gear",  # Dummy value
-        "hardenes_level": 3,  # Dummy value
-        "coordinates": (123.456, 789.123),  # Dummy value
-    }
 
-    return trip_proposition
+    return response_content
 
 #print(tripProposition(place, activity))
