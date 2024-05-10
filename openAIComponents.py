@@ -35,7 +35,6 @@ def tripProposition(place: str, activity: str) -> dict:
 
     response_content = response.choices[0].message.content
 
-
     return response_content
 
 #print(tripProposition(place, activity))

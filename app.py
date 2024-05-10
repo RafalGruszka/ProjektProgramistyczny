@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
 import weatherComponents
 from openAIComponents import tripProposition
 from PyQt6.QtWidgets import QPushButton
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 # Parametry aplikacji
 version = 0.5                       # Wersja aplikacji
 app_name = 'AI Trekking Advisor'    # Nazwa aplikacji
@@ -134,6 +135,14 @@ class WidgetGallery(QDialog):
         tab3.setLayout(tab3hbox)
 
         tab4 = QWidget()
+        Tab4textEdit = QTextEdit()
+        Tab4textEdit.setObjectName("Tab4textEdit")
+        Tab4textEdit.setPlainText("Pogoda.")
+
+        tab4hbox = QHBoxLayout()
+        tab4hbox.setContentsMargins(5, 5, 5, 5)
+        tab4hbox.addWidget(Tab4textEdit)
+        tab4.setLayout(tab4hbox)
 
         self.bottomTabWidget.addTab(tab1, "Lista &miejsc")
         self.bottomTabWidget.addTab(tab2, "&Opis propozycji wyjazdu")
@@ -194,9 +203,16 @@ class WidgetGallery(QDialog):
     def tableItemClicked(self, item):
         place = self.bottomTabWidget.findChild(QTextEdit, "Tab2textEdit")
         equipment = self.bottomTabWidget.findChild(QTextEdit, "Tab3textEdit")
+        weather = self.bottomTabWidget.findChild(QTextEdit, "Tab4textEdit")
         proposition = f'proposition{item.row() + 1}'
         place_from_dict = self.trip_props_dict[proposition]['proposition_details']
         equipment_from_dict = self.trip_props_dict[proposition]['equipment']
+        location_lat = self.trip_props_dict[proposition]['coordinates']['latitude']
+        location_long = self.trip_props_dict[proposition]['coordinates']['longitude']
+        canvas = FigureCanvasQTAgg(weatherComponents.create_plot(location_lat, location_long))
+        layout = QVBoxLayout()
+        layout.addWidget(canvas)
+        weather.setLayout(layout)
         place.setPlainText(place_from_dict)
         equipment.setPlainText(equipment_from_dict)
 
