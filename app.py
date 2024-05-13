@@ -1,24 +1,29 @@
 # Aplikacja wspomagająca planowanie trekkingu lub wspinaczki górskiej
+# Autorzy: Rafał Gruszka, Dawid Furs
+import json
 
-import weatherComponents
 # Importowanie bibliotek PyQt6
 from PyQt6.QtCore import QDateTime, Qt, QTimer
 from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
-        QDial, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-        QProgressBar, QPushButton, QRadioButton, QScrollBar, QSizePolicy,
-        QSlider, QSpinBox, QStyleFactory, QTableWidget, QTabWidget, QTextEdit,
-        QVBoxLayout, QWidget)
+                             QDial, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
+                             QProgressBar, QPushButton, QRadioButton, QScrollBar, QSizePolicy,
+                             QSlider, QSpinBox, QStyleFactory, QTableWidget, QTabWidget, QTextEdit,
+                             QVBoxLayout, QWidget, QTableWidgetItem)
+import weatherComponents
+from openAIComponents import tripProposition
 
 # Parametry aplikacji
-version = 0.5                       # Wersja aplikacji
-app_name = 'AI Trekking Advisor'    # Nazwa aplikacji
-app_width = 1100                    # Szerokość okna aplikacji
-app_height = 600                    # Wysokość okna aplikacji
+version = 0.6                       # App version
+app_name = 'AI Trekking Advisor'    # App name
+app_width = 1100                    # App window width
+app_height = 600                    # App window height
 
 
 class WidgetGallery(QDialog):
     def __init__(self, parent=None):
         super(WidgetGallery, self).__init__(parent)
+
+        trip_props_dict = {}  # Dictionary with trip propositions
 
         self.originalPalette = QApplication.palette()
         self.setMinimumHeight(app_height)
@@ -84,7 +89,7 @@ class WidgetGallery(QDialog):
         findLocPushButton.clicked.connect(self.findLocation)
 
         proposeTripPushButton = QPushButton("Proponuj aktywność")
-        proposeTripPushButton.setDisabled(True)
+        proposeTripPushButton.setDisabled(False)
         proposeTripPushButton.clicked.connect(self.proposeTrip)
         styleComboBox = QComboBox()
 
@@ -102,28 +107,36 @@ class WidgetGallery(QDialog):
         self.bottomTabWidget.setSizePolicy(QSizePolicy.Policy.Preferred,
                 QSizePolicy.Policy.Ignored)
         self.bottomTabWidget.setMinimumWidth(app_width-500)
-        tab1 = QWidget()
-        tableWidget = QTableWidget(5, 2)
+        tab1 = QTabWidget()
+        tableWidget = QTableWidget(3, 3)
+        tableWidget.setHorizontalHeaderLabels(["Miejsce", "Odległość w km", "Poziom trudności"])
+        tableWidget.itemClicked.connect(self.tableItemClicked)
+
 
         tab1hbox = QHBoxLayout()
         tab1hbox.setContentsMargins(5, 5, 5, 5)
         tab1hbox.addWidget(tableWidget)
         tab1.setLayout(tab1hbox)
 
-        tab2 = QWidget()
+        tab2 = QTabWidget() # Opis propozycji wyjazdu
         Tab2textEdit = QTextEdit()
 
         Tab2textEdit.setPlainText("Propozycja trekkingu, wspinaczki lub innej aktywności w zależności od warunków atmosferycznych i lokalizacji.")
+        Tab2textEdit.setReadOnly(True)
+        Tab2textEdit.setObjectName("Tab2textEdit")
+
 
         tab2hbox = QHBoxLayout()
         tab2hbox.setContentsMargins(5, 5, 5, 5)
         tab2hbox.addWidget(Tab2textEdit)
         tab2.setLayout(tab2hbox)
 
-        tab3 = QWidget()
+        tab3 = QTabWidget()
         Tab3textEdit = QTextEdit()
 
         Tab3textEdit.setPlainText("Lista zalecanego sprzętu w zależności od aktywności i warunków atmosferycznych.")
+        Tab3textEdit.setReadOnly(True)
+        Tab3textEdit.setObjectName("Tab3textEdit")
 
         tab3hbox = QHBoxLayout()
         tab3hbox.setContentsMargins(5, 5, 5, 5)
@@ -137,26 +150,70 @@ class WidgetGallery(QDialog):
         self.bottomTabWidget.addTab(tab3, "Lista zalecanego &sprzętu")
         self.bottomTabWidget.addTab(tab4, "Prognoza &pogody")
 
+    def tableItemClicked(self, item):
+
+        place = self.bottomTabWidget.findChild(QTextEdit, "Tab2textEdit")
+        equipment = self.bottomTabWidget.findChild(QTextEdit, "Tab3textEdit")
+        placefromdict = self.trip_props_dict['trip_propositions'][item.row()]['proposition_details']
+        equipmentfromdoct = self.trip_props_dict['trip_propositions'][item.row()]['equipment']
+        place.setPlainText(placefromdict)
+        equipment.setPlainText(equipmentfromdoct)
+
+
     def findLocation(self):
         lineEdit = self.topRightGroupBox.findChild(QLineEdit)
         place = lineEdit.text()
-        locationsWithId = weatherComponents.weatherLocations(place) # Pobranie lokalizacji z API Accuweather
+        locationsWithId = weatherComponents.weatherLocations(place) # Get locationID from Accuweather API
 
-        #pobierz drugi element z listy
         locations = []
         for i in range(len(locationsWithId)):
             locations.append(locationsWithId[i][1])
 
-        # Dodanie wyników lokalizacji do comboboxa
+        # Populate combobox
         styleComboBox = self.topRightGroupBox.findChild(QComboBox)
-        styleComboBox.clear()  # Czyszczenie comboboxa
+        styleComboBox.clear()  # Clear combobox
         styleComboBox.addItems(locations)
 
+
+    def fillTableWidget(self, trip_proposition:dict):
+        tableWidget = self.bottomTabWidget.findChild(QTableWidget)
+
+        # get json attributes and set tableWidget items
+        for prop in trip_proposition['trip_propositions']:
+            # print(prop)
+            tableWidget.setItem(prop['number'] - 1, 0, QTableWidgetItem(prop['place']))
+            tableWidget.item(prop['number'] - 1, 0).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            tableWidget.setItem(prop['number'] - 1, 1, QTableWidgetItem(str(prop['distance'])))
+            tableWidget.item(prop['number'] - 1, 1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            tableWidget.setItem(prop['number'] - 1, 2, QTableWidgetItem(str(prop['hardenes_level'])))
+            tableWidget.item(prop['number'] - 1, 2).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            #print(str(prop['coordinates']['latitude']))
+            #print(str(prop['coordinates']['longitude']))
+
+        tableWidget.resizeColumnsToContents()
+        #tableWidget.resizeRowsToContents()
+
     def proposeTrip(self):
-        trip = ''
+
+        # get activity from radio button
+        if self.topLeftGroupBox.findChild(QRadioButton).isChecked():
+            activity = 'Trekking'
+        else:
+            activity = 'Wspinaczka'
+
+        # get location from lineEdit
+        place = self.topRightGroupBox.findChild(QComboBox).currentText()
+
+        trip_proposition = tripProposition(place, activity)
+        trip_proposition_dict = json.loads(trip_proposition)
+        self.trip_props_dict = trip_proposition_dict
+        self.fillTableWidget(trip_proposition_dict)
 
 
-# Uruchomienie aplikacji
+# Run app
 if __name__ == '__main__':
 
     import sys
