@@ -1,5 +1,6 @@
 import sys
 import json
+import webbrowser
 from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtWidgets import (QApplication, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                              QLineEdit, QVBoxLayout, QPushButton, QRadioButton, QComboBox, QDateTimeEdit,
@@ -51,6 +52,8 @@ class WidgetGallery(QDialog):
 
         self.setWindowTitle(f"{app_name} v. {str(version)}")
         self.changeStyle('Fusion')
+        self.location_from = None
+        self.location_to = None
 
     def changeStyle(self, styleName):
         QApplication.setStyle(QStyleFactory.create(styleName))
@@ -78,6 +81,7 @@ class WidgetGallery(QDialog):
 
         dateTimeEdit = QDateTimeEdit(self.topRightGroupBox)
         dateTimeEdit.setDateTime(QDateTime.currentDateTime())
+        dateTimeEdit.setObjectName("timeObject")
 
         findLocPushButton = QPushButton("Wyszukaj lokalizację")
         findLocPushButton.setDefault(True)
@@ -95,6 +99,12 @@ class WidgetGallery(QDialog):
         layout.addWidget(proposeTripPushButton)
         layout.addWidget(styleComboBox)
         self.topRightGroupBox.setLayout(layout)
+
+    def openWebsite(self):
+        if self.location_from and self.location_to:
+            webbrowser.open(f'www.google.pl/maps/dir/{self.location_from}/{self.location_to}')
+        else:
+            webbrowser.open('http://www.google.pl')
 
     def createbottomTabWidget(self):
         self.bottomTabWidget = QTabWidget()
@@ -141,11 +151,15 @@ class WidgetGallery(QDialog):
         Tab4textEdit.setReadOnly(True)
         Tab4textEdit.setObjectName("Tab4textEdit")
         self.weatherCanvas = MplCanvas(self, width=5, height=4, dpi=100)
+        self.openWebsiteButton = QPushButton('Localization', self)
+        self.openWebsiteButton.clicked.connect(self.openWebsite)
         tab4hbox = QHBoxLayout()
         tab4hbox.setContentsMargins(5, 5, 5, 5)
         tab4hbox.addWidget(Tab4textEdit)
         tab4hbox.addWidget(self.weatherCanvas)
+        tab4hbox.addWidget(self.openWebsiteButton)
         tab4.setLayout(tab4hbox)
+
 
         self.bottomTabWidget.addTab(tab1, "Lista miejsc")
         self.bottomTabWidget.addTab(tab2, "Opis propozycji wyjazdu")
@@ -158,7 +172,7 @@ class WidgetGallery(QDialog):
         hours_list = [hour['DateTime'] for hour in weather_data]
         hours_object = [datetime.fromisoformat(hour) for hour in hours_list]
         hours = [hour.strftime("%H:%M") for hour in hours_object]
-        # Rysowanie wykresu na płótnie
+        # draw plot
         self.weatherCanvas.axes.clear()
         self.weatherCanvas.axes.plot(hours, hourly_temperatures, marker='o', linestyle='-')
         self.weatherCanvas.axes.set_xlabel('Time (Hour)')
@@ -178,10 +192,12 @@ class WidgetGallery(QDialog):
         latitude = self.trip_props_dict['trip_propositions'][item.row()]['coordinates']['latitude']
         longitude = self.trip_props_dict['trip_propositions'][item.row()]['coordinates']['longitude']
         weather_data = weatherComponents.get_hourly_weather(latitude,longitude)
+        self.location_to = self.trip_props_dict['trip_propositions'][item.row()]['place']
 
         place.setPlainText(placefromdict)
         equipment.setPlainText(equipmentfromdoct)
         self.draw_plot(weather_data)
+
 
     def findLocation(self):
         lineEdit = self.topRightGroupBox.findChild(QLineEdit)
@@ -220,6 +236,10 @@ class WidgetGallery(QDialog):
 
         # get location from combobox
         place = self.topRightGroupBox.findChild(QComboBox).currentText()
+        self.location_from = place
+        # time = self.topRightGroupBox.findChild(QDateTimeEdit, "timeObject")
+        # self.time = time.dateTime()
+
 
         trip_proposition = tripProposition(place, activity)
         trip_proposition_dict = json.loads(trip_proposition)

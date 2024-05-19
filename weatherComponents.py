@@ -40,7 +40,6 @@ def get_hourly_weather(latitude, longitude):
     url_weather = f"https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{location_key}?apikey={api_key}&metric=true"
     response_weather = requests.get(url_weather)
     weather_data = response_weather.json()
-    print(weather_data)
     return weather_data
 
 
