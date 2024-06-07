@@ -1,15 +1,10 @@
 from openai import OpenAI
 import json
 
-# Parameters
-
-place = "Jaworzno"
-activity = "trekking"  # trekking/wspinaczka
-
 
 def tripProposition(place: str, activity: str) -> json:
-    api_key = ""
-    organization = ""
+    api_key = "" # API key
+    organization = ""   # Organization ID
     question = f"Zaproponuj miejsce do {activity} w okolicy {place}."
 
     client = OpenAI(api_key=api_key, organization=organization)
@@ -24,7 +19,7 @@ def tripProposition(place: str, activity: str) -> json:
                 "{ \n" 
                     "'number': 1,\n"
                     "'place': <place in capital letters>,\n"
-		            "'proposition_details': <proposition details,\n"
+		            "'proposition_details': <place description with at least 100 words>,\n"
     		        "'distance': <distance in km>, \n"
         		    "'equipment': <necessary equipment>, \n"
 		            "'hardenes_level': <hardenes level in range 1 to 5>, \n"
@@ -37,7 +32,7 @@ def tripProposition(place: str, activity: str) -> json:
 		        "{ \n"
                     "'number': 2, \n"
                     "'place': <place in capital letters>, \n"
-                    "'proposition_details': <proposition details, \n"
+                    "'proposition_details': <place description with at least 100 words>, \n"
                     "'distance': <distance in km>, \n"
                     "'equipment': <necessary equipment>, \n"
                     "'hardenes_level': <hardenes level in range 1 to 5>, \n"
@@ -50,7 +45,7 @@ def tripProposition(place: str, activity: str) -> json:
                 "{ \n"
                     "'number': 3, \n"
                     "'place': <place in capital letters>, \n"       
-                    "'proposition_details': <proposition details, \n"
+                    "'proposition_details': <place description with at least 100 words>, \n"
                     "'distance': <distance in km>, \n"
                     "'equipment': <necessary equipment>, \n"
                     "'hardenes_level': <hardenes level in range 1 to 5>, \n"
@@ -65,15 +60,18 @@ def tripProposition(place: str, activity: str) -> json:
                                   "Each proposition should start from place name written in capital letters, then rest of proposition content.\n"
                                   f"For each place estimate the distance in kilometers from {place} .\n"
                                   f"For each proposition recommend equipment necessary for {activity}.\n"
-                                  #f"For each proposition estimate climbing hardenes level in range from 1 to 5.\n"
-                                  #"Add coordinates for each proposed place."
+                                  f"<proposition_details> JSON atttribute as a place description should contain about 300 words.\n"
                                   "\nAnswer in Polish language."},
         {"role": "user", "content": question}
     ]
     )
     return response.choices[0].message.content
 
+# Parameters
 
+# Test API request
+#place = "Jaworzno"
+#activity = "trekking"  # trekking/wspinaczka
 #x = tripProposition(place, activity)
 #print(type(x))
 #print(x)

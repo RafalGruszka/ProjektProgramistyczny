@@ -3,7 +3,7 @@ import json
 
 apiKey = 'qWGdR3whkDhGy9dmO2AtwahlROfWH0ip'
 endpoint = 'https://dataservice.accuweather.com/locations/v1/'
-offline = True  # True - offline, False - online
+offline = False  # True - offline, False - online
 def weatherLocations(location: str) -> [str]:
 
 # Http request
