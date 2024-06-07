@@ -2,7 +2,7 @@ import sys
 import json
 import webbrowser
 from PyQt6.QtCore import QDateTime, Qt
-from PyQt6.QtWidgets import (QApplication, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+from PyQt6.QtWidgets import (QApplication, QDialog, QGroupBox, QHBoxLayout,
                              QLineEdit, QVBoxLayout, QPushButton, QRadioButton, QComboBox, QDateTimeEdit,
                              QTableWidget, QTabWidget, QTextEdit, QSizePolicy, QTableWidgetItem, QWidget, QStyleFactory)
 from matplotlib.figure import Figure

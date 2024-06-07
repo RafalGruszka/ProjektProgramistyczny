@@ -1,11 +1,5 @@
 import requests
-import matplotlib.pyplot as plt
-from datetime import datetime
 import json
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTextEdit, QTabWidget, QTableWidget, QTableWidgetItem
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 apiKey = 'qWGdR3whkDhGy9dmO2AtwahlROfWH0ip'
 endpoint = 'https://dataservice.accuweather.com/locations/v1/'
