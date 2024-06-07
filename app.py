@@ -12,7 +12,7 @@ import weatherComponents
 from openAIComponents import tripProposition
 
 # Parametry aplikacji
-version = 0.6  # App version
+version = 1.0  # App version
 app_name = 'AI Trekking Advisor'  # App name
 app_width = 1100  # App window width
 app_height = 600  # App window height
